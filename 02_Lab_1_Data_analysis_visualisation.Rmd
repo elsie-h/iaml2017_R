@@ -1,0 +1,130 @@
+---
+title: "02_Lab_1_Data_analysis_visualisation"
+author: "Elsie Horne"
+date: "20 November 2017"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+# Introductory applied machine learning
+## Lab 1 Part 1: Data visualisation
+
+```{r load_packages, message = FALSE}
+library(tidyverse) # for dplyr, ggplot2 etc
+library(stringr) # for processing strings
+```
+
+
+``` {r load_data}
+spambase <- read.csv("spambase.csv") # load data
+spambase <- as_tibble(spambase) # convert to tibble
+head(spambase)
+```
+
+####========== Question 1 ==========
+**a) Display the number of attributes in the dataset (i.e. number of columns).**
+``` {r q1a}
+ncol(spambase)
+```
+
+**b) Display the number of observations (i.e. number of rows).**
+``` {r q1b}
+nrow(spambase)
+```
+
+**c) Display the mean and standard deviation of each attribute.**
+``` {r q1c}
+mean_sd <- function(x) {
+  stopifnot(is.double(x)|is.integer(x)) # only compute if mean or sd
+  out <- vector("double", length(2)) # create output vector to store results
+  out[1] <- mean(x, na.rm = FALSE) # compute mean and store
+  out[2] <- sd(x, na.rm = FALSE) # compute sd and store
+  names(out) <- c("mean", "sd") # assign names to the output vector
+  out # function prints the output vector
+}
+head(spambase_mean_sd <- spambase %>% map(mean_sd)) # display mean & sd for each attribute in spambase
+spambase_mean_sd$word_freq_make[1] # mean of word_freq attribute
+```
+
+
+**We now want to remove some of the attributes from our data. There are various reasons for wanting to do so, for instance we might think that these are not relevant to the task we want to perform (i.e. e-mail classification) or they might have been contaminated with noise during the data collection process.**
+
+###Data cleaning
+####========== Question 2 ==========
+**a) Delete the capital_run_length_average, capital_run_length_longest and  capital_run_length_total attributes.**  
+**b) Display the new number of attributes. Does it look like what you expected?**
+
+``` {r q2}
+spambase %>% select(starts_with("capital")) %>% names() # check that only these three attribute names start with "capital"
+
+spambase_clean <- spambase %>% # create new cleaned dataset
+  select(-starts_with("capital")) # remove attributes whose names begin with "capital"
+```
+
+####========== Question 3 ==========
+
+**Now let's get a feeling of the distribution of ham (i.e. valid) vs. spam emails. We can do this by using a countplot in seaborn.**  
+
+**a) Produce a seaborn countplot object that shows the distribution of ham/spam e-mails. Assign it to a variable (e.g. ax to emphasise it is a matplotlib.axes.Axes object)**
+
+**b) In the same cell, modify the labels on the x axis (xticklabels) to Ham and Spam (by default they should be set to 0.0 and 1.0). Hint: Axes objects have a set_xticklabels method!**
+
+**c) Finally, again in the same cell, remove the is_spam label from the x axis (xlabel) since it does not add any information to the graph.**
+
+``` {r q3}
+spambase_clean %>%
+  mutate_at(vars(is_spam), funs(factor(is_spam, labels = c("ham", "spam")))) %>%
+  ggplot() + 
+  geom_bar(mapping = aes(x = is_spam, fill = is_spam)) +
+  xlab("") +
+  theme(legend.position="none", plot.title = element_text(hjust = 0.5)) +
+  ggtitle("Counting Ham & Spam")
+```
+
+####========== Question 4 ==========
+**a) Create a new dataframe called spambase_binary from spambase.  b) Convert all attributes in spambase_binary to Boolean values:  1 if the word or character is present in the email, or 0 otherwise.**
+
+``` {r q4ab}
+spambase_binary <- spambase_clean %>% 
+  mutate_if(is.double, funs(as.integer(if_else((.>0), 1, 0, missing = NULL))))
+```
+
+# c) Display the 5 last observations of the transformed dataset.
+``` {r q4c}
+tail(spambase_binary, 5)
+```
+
+Save the new dataset
+``` {r spambase_binary}
+save(spambase_binary, file = "spambase_binary.RData")
+```
+
+###Visualisation
+
+**Now we want to get a feeling for how the presence or absence of some specific words could affect the outcome (whether an email is classifed as ham or spam). We will be focusing on three specific words, namely make, internet and edu.**
+
+####========== Question 5 ==========
+
+**a) Using seaborn, produce one figure with three countplots, one for each of the frequency variables for the words make, internet and edu. For each variable, the count plot should have two bars: the number of emails containing the word (i.e. the variable = 1), and the number not containing that word (i.e. the variable = 0).**
+
+``` {r q5a}
+var_word <- c("make", "internet", "edu") # pick the words of interest
+var_select <- str_c("word_freq_", var_word)
+
+spambase_binary %>%
+  select(var_select, is_spam) %>% # keep only owrds of interest and class label
+  mutate_at(vars(var_select), funs(factor(., labels = c("absent", "present")))) %>% # encode words as factors and label as absent or present
+  mutate_at(vars(is_spam), funs(factor(is_spam, labels = c("ham", "spam")))) %>% # encode class as factor and label as ham or spam
+  gather(key = "word", value = "present", -is_spam) %>% # gather data on the words of interest, so that can plot for each one on the same plot
+  mutate(word = str_replace(word, "word_freq_", "")) %>% # keep only word of interest for labels
+  ggplot(aes(x = word, fill = present)) +
+  geom_bar(position = "dodge") + # colour according to present or absent
+  ggtitle("Presence of selected words in emails") + # main plot title
+  theme(axis.title.x=element_blank(), 
+        axis.ticks.x=element_blank(), # remove title, and ticks from x axis
+        legend.title=element_blank(), # remove legend title as unnecessary
+        plot.title = element_text(hjust = 0.5)) # centre main plot title
+```
