@@ -4,4 +4,6 @@ I'm enrolled as a class-only student on the Introductory Applied Machine Learnin
 
 The instructions and questions for these labs can be found at https://github.com/JamesOwers/iaml2017
 
+Any instructions in my .Rmd files given in **bold** are copied from James' instructions in the above link.
+
 This repository contains my solutions to the labs using R, I'll upload them as I go along. There are some questions that I struggled to translate from Python to R - any suggestions/improvements would be much appreciated!
