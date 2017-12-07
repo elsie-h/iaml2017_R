@@ -1,0 +1,269 @@
+---
+title: "Lab_2_Linear_Regression"
+author: "Elsie Horne"
+date: "01/12/2017"
+output: html_document
+---
+
+# 2. Linear Regression
+
+Load tidyverse
+```{r load_packages, message = FALSE}
+library(tidyverse)
+```
+
+Load data
+```{r load_data, results = "hide"}
+cpu <- read.csv(file = "cpu.csv")
+cpu <- as_tibble(cpu) # convert cpu to tibble as using tidyverse
+```
+
+## ========== Question 2.1 ==========
+**Display the number of data points and attributes in the dataset.**
+``` {r q2.1}
+ncol(cpu) # number of attributes
+nrow(cpu) # number of data points
+```
+## ========== Question 2.2 ==========
+
+**Get a feeling of the data.**
+``` {r q2.2}
+str(cpu)
+```
+## ========== Question 2.3 ==========
+
+**Display the first 10 data points of the dataset**
+``` {r q2.3}
+head(cpu, 10)
+```
+## ========== Question 2.4 ==========
+
+**You might have noticed that the vendor attribute is categorical. This will give problems when using a linear regression model. For now we can simply remove this attribute. Create a new DataFrame called cpu_clean by copying cpu but omit the vendor attribute. Display the number of samples and attributes in the clean dataset as a sanity check.**
+
+``` {r q2.4}
+cpu_clean <- cpu %>% select(-vendor)
+ncol(cpu_clean)
+nrow(cpu_clean)
+```
+## ========== Question 2.5 ==========
+
+**Now -as always- we want to perform some exploratory data analysis. Remember that our task is to predict ERP values, so it's a good idea to inspect individual scatter plots of the target variable (ERP) against our input features.**
+
+**Create a series of pairplots showing the pairwise relationship of ERP and the remaining attributes in the data. You can do so by specifying explicitly the x_vars and y_vars input arguments in the pairplot. Hnt: Your final plot will consist of 6 subplots each contaning a scatter plot.**
+
+The GGally package is an extension of ggplot, the function ggpairs can be used for matrix plots.
+
+```{r q2.5a, message = FALSE}
+library(GGally) # load GGally package
+```
+
+``` {r q2.5b}
+cpu_clean %>% 
+  ggduo(columnsX = which(colnames(cpu_clean)!="ERP"), columnsY = which(colnames(cpu_clean)=="ERP"),
+        types = list(continuous = "points"),
+        aes(colour = ERP))
+```
+
+## ========== Question 2.6 ==========
+
+**Do you think that ERP should be at least partially predictable from the input attributes? Do any attributes exhibit significant correlations?**
+
+ERP appears to be associated with all 6 input variables.
+
+Calculate the correlations between ERP and each input varaible
+``` {r q2.5c}
+cor(cpu_clean)["ERP",]
+```
+
+ERP has strong linear association with MMIN and MMAX, and moderate linear association with CCACH, CHMIN and CHMAX.
+
+Association with MYCYT is not linear, looks like inverse relationship from the scatter plot.
+
+## ========== Question 2.7 ==========
+**Now we have a feel for the data and we will try fitting a simple linear regression model. Similarly to what we did in the first part of the lab, we want to use cross-validation to evaluate the goodness of the fit.**
+
+load the caret package
+``` {r q2.7a, message = FALSE}
+library(caret)
+```
+
+**Split the dataset into training and testing sets by using a 75%-25% split (training/testing).**
+
+``` {r q2.7b}
+set.seed(123) # set seed so that we produce the same train/test sets if analysis repeated
+
+cpu_clean <- cpu_clean %>% # create variables to split to train and test set
+  mutate(train = runif(nrow(cpu_clean)), rank = rank(train)) 
+
+cpu_test  <- cpu_clean %>% # create test set
+  filter(rank<=0.25*nrow(cpu_clean)) %>%
+  select(-train, - rank)
+
+cpu_train <- cpu_clean %>% # create train set
+  filter(rank>0.25*nrow(cpu_clean)) %>%
+  select(-train, - rank)
+```
+
+**Display the shapes of all matrices involved and double-check that all dimensionalities appear to be as expected.**
+
+``` {r q2.7c}
+nrow(cpu_train)
+ncol(cpu_train)
+
+nrow(cpu_test)
+ncol(cpu_test)
+```
+## ========== Question 2.8 ==========
+**Fit a simple linear regressor. Report the training accuracy by using the score attribute. What does this represent?**
+
+``` {r q2.8}
+lm_train <- lm(ERP ~ ., data = cpu_train)
+summary(lm_train)$r.squared
+# same answer by calculating directly R-squared = corr^2
+# this relationship between R-squared and the correlation only holds for
+# a) models that minimise squared error
+# b) the data the model was trained on, does not hold for new data
+cpu_train$pred <- lm_train$fitted.values
+cor(cpu_train$pred, cpu_train$ERP)^2 
+```
+The score attribute (r-squared statistic/coefficient of determination) represents the proportion of variability in ERP that is explained by the model lm_train
+
+
+## ========== Question 2.9 ==========
+**Now report the testing accuracy by using the score attribute of the regressor as well as the r2_score metric. Confirm that these two yield identical results.**
+
+I couldn't work out how to do this using lm.predict, so I just calculated it directly.
+
+``` {r q2.9}
+cpu_test$pred <- predict(lm_train, cpu_test)
+###
+# Calculate mean ERP in test set. 
+ERP_test_mean <- mean(cpu_test$ERP)
+
+# Calculate total sum of squares: tss. 
+tss <- sum((cpu_test$ERP - ERP_test_mean)^2)
+
+# calculate the residuals
+res <- cpu_test$ERP - cpu_test$pred
+
+# Calculate residual sum of squares: rss. 
+rss <- sum(res^2)
+
+# Calculate R-squared: rsq.
+(rsq <- 1 - (rss/tss))
+```
+
+**How does the accuracy compare to the one reported on the training dataset? Do you think that your model does well on generalising on unseen data?**
+
+The r-squared coefficient is just slightly lower on the test set, so overfitting doesn't seem to be a problem.
+
+
+## ========== Question 2.10 ==========
+**Now we want to get a feel for how good the fit is, so we wil plot the measured values against the predicted ones.**
+``` {r q2.10}
+cpu_clean %>%
+  mutate(pred = predict(lm_train, cpu_clean)) %>%
+  ggplot(aes(x = pred, y = ERP)) +
+  geom_point() +
+  geom_abline(colour = "blue") +
+  labs(x = "predicted ERP", y = "actual ERP")
+  
+```
+
+**Where would you expect the circles to be for a perfect fit?**
+Along the abline
+
+## ========== Question 2.11 ==========
+**Another way of assessing the performance of the model is to inspect the distribution of the errors. Make a histogram plot. This will also show an estimate of the underlying distribution.**
+``` {r q2.11}
+cpu_clean %>%
+  mutate(pred = predict(lm_train, cpu_clean),
+         resid = ERP - pred) %>%
+  ggplot(aes(resid)) +
+  geom_histogram() +
+  labs(x = "residuals")
+
+```
+
+**Does it look like the errors are normally distributed? Would you trust the fit of the distribution on the graph? Explain why.**
+
+It's approx normal around zero, but is positively skewed, with a few very large errors. This is not surprising:
+-looking at the plot in Question 2.5, there is not much data for large values of ERP (>500)
+-looking at the plot in Question 2.10 the relationship does not look quite linear. The model is underpredicting for small and large values of ERP, particularly for large values.
+
+Also the model predicts negative values for ERP, while actual values for ERP are all positive. I don't know what the ERP variable is, but negative values could be nonesense.
+
+Overall though I would trust the model, but would be wary of both negative and very large ERP predictions.
+
+## ========== Question 2.12 ==========
+**Above we deleted the vendor variable. However, we can use nominal attributes in regression by converting them to numeric, exactly in the same way that we did at the first part of this lab.**
+
+**Now, use the original cpu dataset and convert the vendor attribute to numeric. Then train a linear regression model to the data and compare its performance to the one we had previously. Did adding the binazired vendor variable help? **
+
+``` {r q2.12a}
+# convert vendor to numeric variable
+cpu_v <- cpu %>%
+  mutate(vendor = as.numeric(vendor))
+
+## create train and test sets
+set.seed(123) # set seed so that we produce the same train/test sets if analysis repeated
+
+cpu_v <- cpu_v %>% # create variables to split to train and test set
+  mutate(train = runif(nrow(cpu_v)), rank = rank(train)) 
+
+cpu_v_test  <- cpu_v %>% # create test set
+  filter(rank<=0.25*nrow(cpu_v)) %>%
+  select(-train, - rank)
+
+cpu_v_train <- cpu_v %>% # create train set
+  filter(rank>0.25*nrow(cpu_v)) %>%
+  select(-train, - rank)
+
+
+# check the dimensionalities are as expected
+dim(cpu_v_train)
+dim(cpu_v_test)
+
+## train the model
+lm_v_train <- lm(ERP ~ ., data = cpu_v_train)
+
+## train set r-squared
+summary(lm_v_train)$r.squared
+
+## test set r squared (not sure how to do this using lm, so calculate directly again)
+cpu_v_test$pred <- predict(lm_v_train, cpu_v_test)
+
+# mean in unchaged from before (providing the test and train sets are the same, which they are as we specified a seed)
+
+# Calculate total sum of squares: tss. 
+tss_v <- sum((cpu_v_test$ERP - ERP_test_mean)^2)
+
+# calculate the residuals
+res_v <- cpu_v_test$ERP - cpu_v_test$pred
+
+# Calculate residual sum of squares: rss. 
+rss_v <- sum(res_v^2)
+
+# Calculate R-squared: rsq.
+(rsq_v <- 1 - (rss_v/tss_v))
+```
+
+The accuracy looks much the same as the last model, the vendor variable does not seem to help with prediction.
+Do some plots to double check
+
+``` {r q2.12b}
+cpu_v %>%
+  mutate(pred = predict(lm_v_train, cpu_v)) %>%
+  ggplot(aes(x = pred, y = ERP)) +
+  geom_point() +
+  geom_abline(colour = "blue") +
+  labs(x = "predicted ERP", y = "actual ERP")
+
+cpu_v %>%
+  mutate(pred = predict(lm_v_train, cpu_v),
+         resid = ERP - pred) %>%
+  ggplot(aes(resid)) +
+  geom_histogram() +
+  labs(x = "residuals")
+```
+The plots also look much the same.
