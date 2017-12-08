@@ -25,6 +25,7 @@ head(spambase)
 ```
 
 ####========== Question 1 ==========
+
 **a) Display the number of attributes in the dataset (i.e. number of columns).**
 ``` {r q1a}
 ncol(spambase)
@@ -54,6 +55,7 @@ spambase_mean_sd$word_freq_make[1] # mean of word_freq attribute
 
 ###Data cleaning
 ####========== Question 2 ==========
+
 **a) Delete the capital_run_length_average, capital_run_length_longest and  capital_run_length_total attributes.**  
 **b) Display the new number of attributes. Does it look like what you expected?**
 
@@ -85,6 +87,7 @@ spambase_clean %>%
 ```
 
 ####========== Question 4 ==========
+
 **a) Create a new dataframe called spambase_binary from spambase.  b) Convert all attributes in spambase_binary to Boolean values:  1 if the word or character is present in the email, or 0 otherwise.**
 
 ``` {r q4ab}
@@ -92,7 +95,7 @@ spambase_binary <- spambase_clean %>%
   mutate_if(is.double, funs(as.integer(if_else((.>0), 1, 0, missing = NULL))))
 ```
 
-# c) Display the 5 last observations of the transformed dataset.
+**c) Display the 5 last observations of the transformed dataset.**
 ``` {r q4c}
 tail(spambase_binary, 5)
 ```
