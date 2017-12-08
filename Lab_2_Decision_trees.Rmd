@@ -12,15 +12,7 @@ knitr::opts_chunk$set(echo = TRUE)
 # Introductory applied machine learning
 ## Lab 2 Part 1: Decision trees
 
-The instructions and questions for completing the lab using python can be found here:
-
-https://github.com/JamesOwers/iaml2017/blob/master/04_Lab_2_Decision_trees_linear_regression.ipynb
-
-Any instructions in **bold** are copied from James' instructions in the above link.
-
-These are my solutions using R. 
-
-First, load tidyverse:
+Load tidyverse:
 
 ```{r loadpackages, message = FALSE}
 library(tidyverse)
@@ -34,26 +26,26 @@ credit <- read.csv(file = "credit.csv")
 credit <- as_tibble(credit) # convert credit to tibble as using tidyverse
 ```
 
-### ========== Question 1.1 ==========
+## ========== Question 1.1 ==========
 **Display the number of data points and attributes in the dataset.**
 ```{r q1.1}
 count(credit) # number of datapoints
 length(credit) # number of attributes
 ```
 
-###========== Question 1.2 ==========
+## ========== Question 1.2 ==========
 **Get a feeling of the data by using pandas describe() method. Be careful - there is a mixture of numeric and categorical data...**
 ```{r q1.2}
 str(credit) # check the types of variables in credit
 ```
 
-###========== Question 1.3 ==========
+## ========== Question 1.3 ==========
 **Display the first 10 data points of the dataset**
 ```{r q1.3}
 head(credit, n=10)
 ```
 
-###========== Question 1.4 ==========
+## ========== Question 1.4 ==========
 **When presented with a dataset, it is usually a good idea to visualise it first. By using seaborn's pairplot function, try visualising a scatter plot of the Age and Duration variables. You can use the Approve variable as the hue parameter to visualise results separately for each class. Do you notice anything unusual?**
 
 The GGally package is an extension of ggplot, the function ggpairs can be used for matrix plots.
@@ -80,14 +72,14 @@ credit %>%
 
 Now it's much easier to view age distribution, and correlation is no longer affected by the outlier, but is still close to zero.
 
-###========== Question 1.5 ==========
+## ========== Question 1.5 ==========
 **In the previous point you should have found a data point, which seems to be corrupted, as some of its values are nonsensical. Even a single point like this can significantly affect the performance of a classifier. How do you think it would affect Decision trees? How about Naive Bayes? A good way to check this is to test the performance of each classifier before and after removing this datapoint.**
 
 I didn't have time to check the performance with and without the outlier, but if assuming a Gaussian distribution for the attributes in Naive Bayes, the outlier could significantly affect performance.
 
 The performance of a decision tree classifier is less likely to be affected, as it splits the Age data using a threshold, and so is less sensitive to the absolute values.
 
-###========== Question 1.6 ==========
+## ========== Question 1.6 ==========
 **Now we want to remove this instance from the dataset by using a filter. We want to remove all instances, where the age of an applicant is lower than 0 years, as this suggests that the instance is corrupted. Use logical indexing to get rid of these instances without creating a new dataframe. Display the number of data points after any outliers have been removed.**
 
 ``` {r q1.5}
@@ -98,7 +90,7 @@ credit %>%
 
 So we only lost one datapoint.
 
-###========== Question 1.7 ==========
+## ========== Question 1.7 ==========
 **You might have noticed that most of the attributes in the dataset are in fact discrete. Now we want to know which variables exactly are discrete (both categorical and numerical, look here if you are unsure about the difference) and which are continuous variables. In order to do so, we will inspect the number of possible values that each attribute can take.**
 **Display the number of values each attributes takes in the dataset. Hint: As a first step, you want to loop over the columns of the DataFrame. Then you might find the numpy unique function quite useful.**
 
@@ -141,12 +133,12 @@ credit_clean %>%
 I think I've addressed this to some extent by encoding the four variables (see previous chunk) as factors. However, I have not encoded all discrete attributes to take values between 0 and n-values-1 using LabelEncoder as suggested. I think I should be able to do this using the CRAN "CatEncoders" package, but couldn't work it out. Will come back to this when I have time!
 
 
-###========== Question 1.8 ==========
+## ========== Question 1.8 ==========
 **Display the first 10 data points of the clean data. Does it look like what you expected?**
 ``` {r q1.8}
 head(credit_clean, n=10)
 ```
-###========== Question 1.9 ==========
+## ========== Question 1.9 ==========
 **Store the input features (i.e. attributes) into a matrix X and the target variable (Approve) into a vector y.**
 
 **Remember to not include the target variable into X. Hint: You can either use pandas as_matrix() or values.**
@@ -155,7 +147,7 @@ head(credit_clean, n=10)
 
 I don't think I need to do this step in R.
 
-#### HOLD OUT VALIDATION
+## HOLD OUT VALIDATION
 
 Create the train and test sets.
 
@@ -173,7 +165,7 @@ credit_test <- credit_clean %>% # create testing set
   select(-train) 
 ```
 
-###========== Question 1.10 ==========
+## ========== Question 1.10 ==========
 **Confirm that X_train and X_test matrices are subsets of X by displaying the number of rows in the three matrices (no need to make use of set theory).**
 
 ``` {r q1.10}
@@ -186,7 +178,7 @@ count(credit_test)
 
 The data is split into roughly 90% for training and roughly 10% for testing.
 
-###========== Question 1.11 ==========
+## ========== Question 1.11 ==========
 **Now we will train a Decision Tree classifier on the training data. Read about Decision Tree classifiers in Scikit-learn and how they are used.**
 
 I will use the CRAN package "rpart".
@@ -221,7 +213,7 @@ rpart.plot(dt1, # the decision tree model from previous question
            fallen.leaves = TRUE) # positions all leaf nodes at the bottom of the graph
 ```
 
-###========== Question 1.12 ==========
+## ========== Question 1.12 ==========
 **Inspect the tree. Describe what it shows.**
 
 **Which attribute yields the highest information gain and what is its critical value.**
@@ -239,14 +231,14 @@ summary(dt1) gives three values correspodning to splits, none of which are the i
 I need to spend some more time understanding the rpart stored results!
 
 
-###========== Question 1.13 ==========
+## ========== Question 1.13 ==========
 **Tree-based estimators (i.e. decision trees and random forests) can be used to compute feature importances. The importance of a feature is computed as the (normalized) total reduction of entropy (or other used criterion) brought by that feature. Find the relevant attribute of the classifier you just trained and display feature importances along with their names.**
 
 ``` {r q1.13}
 dt1$variable.importance
 ```
 
-###========== Question 1.14 ==========
+## ========== Question 1.14 ==========
 **Now we want to evaluate the performance of the classifier on unseen data. Use the trained model to predict the target variables for the test data set. Display the classification accuracy for both the training and test data sets. What do you observe? Are you surprised by the results?**
 
 ``` {r q1.14}
@@ -263,7 +255,7 @@ NB: In his solutions, James points out that:
 
 In my data, 70% of outcomes are 'good', so the dummy classifier doesn't quite beat the model, although the model is not much better.
 
-###========== Question 1.15 ==========
+## ========== Question 1.15 ==========
 Fit another DecisionTreeClassifier but this time grow it to full depth (i.e. remove the max_depth condition. Display the classification accuracy for training and test data as above. Again, what do you observe and are you surprised?
 
 ``` {r q1.15}
@@ -282,7 +274,7 @@ test_pred2 <- predict(dt2, credit_test, type = "class")
 This time train set accuracy is 0.025 higher than test set accuracy. So the model has overfit only slightly, and both accuracies are only slightly better than the dummy classifier of setting all outcomes as 'good'.
 
 
-###========== Question 1.16 ==========
+## ========== Question 1.16 ==========
 **By using seaborn's heatmap function, plot the normalised confusion matrices for both the training and test data sets for the max_depth=2 decision tree from question 1.11. Make sure you label axes appropriately.**
 
 ``` {r q1.16}
@@ -303,7 +295,7 @@ as_tibble(prop.table(test_conf1, margin = 1)) %>%
   scale_fill_continuous(name = "P(true = y|pred = x)")
 ```
 
-###========== Question 1.17 ==========
+## ========== Question 1.17 ==========
 **Finally we will create a Random decision forest classifier and compare the performance of this classifier to that of the decision tree. The random decision forest is an ensemble classifier that consists of many decision trees and outputs the class that is the mode of the class's output by individual trees. Start with n_estimators = 100, use the entropy criterion and the same train/test split as before.** 
 
 ``` {r q1.17a, message = FALSE}
@@ -338,7 +330,7 @@ prop.table(test_conf2, margin = 1) # test confusion matrix for decision tree gro
 
 The random forest classifier has better accuracy at predicting 'bad' outcomes compared to the decision tree (full depth), but has worse accuracy at predicting 'good' outcomes.
 
-###========== Question 1.19 ==========
+## ========== Question 1.19 ==========
 **Compare the feature importances as estimated with the decision tree and random forest classifiers.**
 ``` {r q1.19}
 dt2$variable.importance

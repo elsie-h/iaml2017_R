@@ -5,10 +5,6 @@ date: "20 November 2017"
 output: html_document
 ---
 
-```{r setup, include=FALSE}
-knitr::opts_chunk$set(echo = TRUE)
-```
-
 # Introductory applied machine learning
 ## Lab 1 Part 1: Data visualisation
 
