@@ -20,7 +20,7 @@ spambase <- as_tibble(spambase) # convert to tibble
 head(spambase)
 ```
 
-##========== Question 1 ==========
+## ========== Question 1 ==========
 
 **a) Display the number of attributes in the dataset (i.e. number of columns).**
 ``` {r q1a}
@@ -49,8 +49,8 @@ spambase_mean_sd$word_freq_make[1] # mean of word_freq attribute
 
 **We now want to remove some of the attributes from our data. There are various reasons for wanting to do so, for instance we might think that these are not relevant to the task we want to perform (i.e. e-mail classification) or they might have been contaminated with noise during the data collection process.**
 
-##Data cleaning
-##========== Question 2 ==========
+## Data cleaning
+## ========== Question 2 ==========
 
 **a) Delete the capital_run_length_average, capital_run_length_longest and  capital_run_length_total attributes.**  
 **b) Display the new number of attributes. Does it look like what you expected?**
@@ -62,7 +62,7 @@ spambase_clean <- spambase %>% # create new cleaned dataset
   select(-starts_with("capital")) # remove attributes whose names begin with "capital"
 ```
 
-##========== Question 3 ==========
+## ========== Question 3 ==========
 
 **Now let's get a feeling of the distribution of ham (i.e. valid) vs. spam emails. We can do this by using a countplot in seaborn.**  
 
@@ -82,7 +82,7 @@ spambase_clean %>%
   ggtitle("Counting Ham & Spam")
 ```
 
-##========== Question 4 ==========
+## ========== Question 4 ==========
 
 **a) Create a new dataframe called spambase_binary from spambase.  b) Convert all attributes in spambase_binary to Boolean values:  1 if the word or character is present in the email, or 0 otherwise.**
 
@@ -101,11 +101,11 @@ Save the new dataset
 save(spambase_binary, file = "spambase_binary.RData")
 ```
 
-##Visualisation
+## Visualisation
 
 **Now we want to get a feeling for how the presence or absence of some specific words could affect the outcome (whether an email is classifed as ham or spam). We will be focusing on three specific words, namely make, internet and edu.**
 
-##========== Question 5 ==========
+## ========== Question 5 ==========
 
 **a) Using seaborn, produce one figure with three countplots, one for each of the frequency variables for the words make, internet and edu. For each variable, the count plot should have two bars: the number of emails containing the word (i.e. the variable = 1), and the number not containing that word (i.e. the variable = 0).**
 
