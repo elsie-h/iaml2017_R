@@ -19,7 +19,7 @@ library(tidyverse)
 **Load spambase_binary.csv, display the number of instances and attributes and the first 5 samples. Remember that the attributes have been binarised. The instances have also been shuffled (i.e. their order has been randomised)**
 
 ``` {r q1.1}
-spambase_binary <- read.csv(file = "spambase_binary.csv")
+spambase_binary <- read.csv(file = "spambase_binary.csv") # need to sort out the encoding here for the special characters
 spambase_binary <- as_tibble(spambase_binary)
 dim(spambase_binary)[1] # instances
 dim(spambase_binary)[2] # attributes
@@ -68,6 +68,15 @@ spam_test$spam_pred <- ifelse(spam_test$spam_prob > mean(spam_train$is_spam), 1,
 
 The accuracy on the train set is `acc_train` and the accuracy on the test set is `acc_test`, these are close, suggesting the model generalises well to new data.
 
+## ========== Question 1.4 ==========
+**Print the coefficients for class 1 for the attributes word_freq_hp_binarized and char_freq_$_binarized.**
+``` {r q1.4}
+
+```
+
+**Generally, we would expect the string $ to appear in spam, and the string hp to appear in non-spam e-mails, as the data was collected from HP Labs. Do the regression coefficients make sense given that class 1 is spam? Hint: Consider the sigmoid function and how it transforms values into a probability between 0 and 1. Since our attributes are boolean, a positive coefficient can only increase the total sum fed through the sigmoid and thus move the output of the sigmoid towards 1. What can happen if we have continuous, real-valued attributes?**
+
+`
 
 
 
