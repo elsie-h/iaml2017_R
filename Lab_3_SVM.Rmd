@@ -54,8 +54,19 @@ dim(spam_test)
 ## ========== Question 1.3 ==========
 Train a LogisticRegression classifier by using training data. Report the classification accuracy on both the training and test sets. Does your classifier generalise well on unseen data?
 
+``` {r q1.3}
+lr_model <- glm(is_spam ~ ., data = spam_train, family = "binomial")
+# train set predictions and accuracy
+spam_train$spam_prob <- predict(lr_model, type = "response")
+spam_train$spam_pred <- ifelse(spam_train$spam_prob > mean(spam_train$is_spam), 1, 0)
+(acc_train <- mean(spam_train$spam_pred == spam_train$is_spam))
+# test set predictions and accuracy
+spam_test$spam_prob <- predict(lr_model, newdata = spam_test, type = "response")
+spam_test$spam_pred <- ifelse(spam_test$spam_prob > mean(spam_train$is_spam), 1, 0) # use the mean from the train set
+(acc_test <- mean(spam_test$spam_pred == spam_test$is_spam))
+```
 
-
+The accuracy on the train set is `acc_train` and the accuracy on the test set is `acc_test`, these are close, suggesting the model generalises well to new data.
 
 
 
