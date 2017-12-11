@@ -59,24 +59,34 @@ lr_model <- glm(is_spam ~ ., data = spam_train, family = "binomial")
 # train set predictions and accuracy
 spam_train$spam_prob <- predict(lr_model, type = "response")
 spam_train$spam_pred <- ifelse(spam_train$spam_prob > mean(spam_train$is_spam), 1, 0)
-(acc_train <- mean(spam_train$spam_pred == spam_train$is_spam))
+(acc_train <- round(mean(spam_train$spam_pred == spam_train$is_spam), 2))
 # test set predictions and accuracy
 spam_test$spam_prob <- predict(lr_model, newdata = spam_test, type = "response")
 spam_test$spam_pred <- ifelse(spam_test$spam_prob > mean(spam_train$is_spam), 1, 0) # use the mean from the train set
-(acc_test <- mean(spam_test$spam_pred == spam_test$is_spam))
+(acc_test <- round(mean(spam_test$spam_pred == spam_test$is_spam), 2))
 ```
 
-The accuracy on the train set is `acc_train` and the accuracy on the test set is `acc_test`, these are close, suggesting the model generalises well to new data.
+The accuracy on the train set is `r acc_train` and the accuracy on the test set is `r acc_test`, these are close, suggesting the model generalises well to new data.
 
 ## ========== Question 1.4 ==========
 **Print the coefficients for class 1 for the attributes word_freq_hp_binarized and char_freq_$_binarized.**
-``` {r q1.4}
 
+An encoding error means that `char_freq_$_binarized` appears as `char_freq_._binarized.4` - I tried to sort this out with the `fileEndcoing` and `encoding` options in `read.csv` but couldn't work it out. I will look into this when I have more time.
+
+``` {r q1.4}
+(lo_hp <- round(lr_model$coefficients["word_freq_hp_binarized"], 2))
+(lo_.4 <- round(lr_model$coefficients["char_freq_._binarized.4"], 2))
 ```
 
 **Generally, we would expect the string $ to appear in spam, and the string hp to appear in non-spam e-mails, as the data was collected from HP Labs. Do the regression coefficients make sense given that class 1 is spam? Hint: Consider the sigmoid function and how it transforms values into a probability between 0 and 1. Since our attributes are boolean, a positive coefficient can only increase the total sum fed through the sigmoid and thus move the output of the sigmoid towards 1. What can happen if we have continuous, real-valued attributes?**
 
-`
+Interpretation f coefficients:
+The log odds of an email being spam changes by `r lo_hp` and `r lo_.4` when "hp" and "\$" are present in the email respectively. I.e. presence of "hp" means the email less likely to categorized as spam, "\$" more likey to be categorized as spam. This makes sense.
+
+Note: I tried to name the variable "lo_$", which was fine using backticks when assigning the name, but couldn't work out how to print this in R markdown without producing errors. 
+
+
+
 
 
 
